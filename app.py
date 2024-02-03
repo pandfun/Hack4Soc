@@ -1,24 +1,36 @@
+import io
+import pyttsx3
 from flask import Flask, render_template, request, jsonify
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 import torch
 from PIL import Image
-import io
 
 app = Flask(__name__)
 
+# Load model and processor
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 feature_extractor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 
+# Device placement
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
+# Generation parameters
 max_length = 20
 num_beams = 8
 gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
 
+def text_to_speech(text):
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 150)  # Adjust speaking rate as needed
+    engine.say(text)
+    audio_data = engine.runAndWait()  # Capture the generated audio data
+    return audio_data
+
 def predict_step(image):
     try:
+        # Image processing and model inference
         i_image = Image.open(io.BytesIO(image))
         if i_image.mode != "RGB":
             i_image = i_image.convert(mode="RGB")
@@ -26,17 +38,17 @@ def predict_step(image):
         pixel_values = feature_extractor(images=i_image, return_tensors="pt").pixel_values
         pixel_values = pixel_values.to(device)
 
-        # Create an attention mask to handle padding
         attention_mask = torch.ones(pixel_values.shape[:2], device=device)
-
         output_ids = model.generate(pixel_values, attention_mask=attention_mask, **gen_kwargs)
         preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         preds = [pred.strip() for pred in preds]
 
-        return preds
+        # Generate audio for the description
+        audio_data = text_to_speech(preds[0])  # Using the first caption
+        return jsonify({'description': preds[0], 'audio_data': audio_data.tobytes()})
     except Exception as e:
         print("Error processing image:", e)
-        return None
+        return jsonify({'error': 'Failed to generate description'})
 
 @app.route('/')
 @app.route('/home')
