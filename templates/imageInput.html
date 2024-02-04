@@ -1,13 +1,10 @@
 {% extends "layout.html" %} {% block content %}
-<div
-    style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        height: 100vh;
-    "
->
-    <form method="post" enctype="multipart/form-data" style="width: 200px">
+<div style="display: flex; flex-direction: column; align-items: center">
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        style="width: 200px; margin-top: 20px"
+    >
         <input type="file" name="image" accept="image/*" id="imageInput" />
         <div
             class="chosen-image"
@@ -15,9 +12,14 @@
         >
             <img
                 id="previewImage"
-                src=""
+                src="../static/Images/upload.jpg"
                 alt="Selected Image"
-                style="width: 100%; height: 100%; object-fit: cover"
+                style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 4px;
+                "
             />
         </div>
         <button class="generateDesc" type="submit">Generate Description</button>
@@ -25,7 +27,8 @@
     <p id="result" style="text-align: center"></p>
 </div>
 
-<audio id="myAudio"></audio> <button id="playPauseButton">Play/Pause</button>
+<audio id="myAudio"></audio>
+<button id="playPauseButton" style="opacity: 0">Play/Pause</button>
 
 <script>
     const imageInput = document.getElementById("imageInput");
