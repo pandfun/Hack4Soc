@@ -24,6 +24,9 @@
     </form>
     <p id="result" style="text-align: center"></p>
 </div>
+
+<audio id="myAudio"></audio> <button id="playPauseButton">Play/Pause</button>
+
 <script>
     const imageInput = document.getElementById("imageInput");
     const previewImage = document.getElementById("previewImage");
@@ -49,8 +52,33 @@
             method: "POST",
             body: formData,
         });
+
         const data = await response.json();
+        console.log(data);
         document.getElementById("result").textContent = data.description;
+
+        // Update audio and play button
+        const audio = document.getElementById("myAudio");
+        const playPauseButton = document.getElementById("playPauseButton");
+
+        audio.src = URL.createObjectURL(
+            new Blob([data.audio_data], { type: "audio/wav" })
+        );
+        audio.play();
+        playPauseButton.textContent = "Pause";
+    });
+
+    const audio = document.getElementById("myAudio");
+    const playPauseButton = document.getElementById("playPauseButton");
+
+    playPauseButton.addEventListener("click", () => {
+        if (audio.paused) {
+            audio.play();
+            playPauseButton.textContent = "Pause";
+        } else {
+            audio.pause();
+            playPauseButton.textContent = "Play";
+        }
     });
 </script>
 {% endblock content %}
